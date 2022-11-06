@@ -1,11 +1,24 @@
 import { Paper, TextInput, Button, Text, Group } from "@mantine/core";
+import Image from "next/image";
 import { useState } from "react";
+
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
 export default function Home() {
 	const [cityInput, setCityInput] = useState("");
+	const [weatherData, setWeatherData] = useState<any>({});
 
 	async function getWeatherData() {
-		console.log("Button pressed");
+		try {
+			const res = await fetch(
+				`https://api.openweathermap.org/data/2.5/weather?q=${cityInput}&appid=${API_KEY}&units=metric`
+			);
+			const data = await res.json();
+			if (data?.cod === "400") throw data;
+			setWeatherData(data);
+		} catch (error) {
+			console.log(error);
+		}
 	}
 	return (
 		<div
@@ -49,6 +62,24 @@ export default function Home() {
 							Get weather
 						</Button>
 					</Group>
+					{Object.keys(weatherData).length !== 0 ? (
+						<>
+							<Group position="left">
+								<Text>{weatherData.name}</Text>
+							</Group>
+							<Group position="left">
+								<Image
+									src={`http://openweathermap.org/img/wn/${weatherData?.weather[0]?.icon}@4x.png`}
+									width="100"
+									height="100"
+									alt="Icon weather"
+								/>
+								<Text size={"lg"} weight="500">
+									Currently {weatherData.main.temp}&deg;C
+								</Text>
+							</Group>
+						</>
+					) : null}
 				</Paper>
 			</div>
 		</div>
